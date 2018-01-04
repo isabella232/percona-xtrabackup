@@ -37,16 +37,24 @@ static unsigned char dh512_g[]={
 static DH *get_dh512(void)
 {
   DH *dh;
-  if ((dh=DH_new()))
-  {
-    dh->p=BN_bin2bn(dh512_p,sizeof(dh512_p),NULL);
-    dh->g=BN_bin2bn(dh512_g,sizeof(dh512_g),NULL);
-    if (! dh->p || ! dh->g)
-    {
-      DH_free(dh);
-      dh=0;
-    }
+  BIGNUM* p = BN_bin2bn(dh512_p,sizeof(dh512_p),NULL);
+  if (!p)
+    return NULL;
+  BIGNUM* g = BN_bin2bn(dh512_g,sizeof(dh512_g),NULL);
+  if (!g) {
+    BN_free(p);
+    return NULL;
   }
+  dh = DH_new();
+  if (!dh) {
+    BN_free(p);
+    BN_free(g);
+    return NULL;
+  }
+  if (!DH_set0_pqg(dh, p, NULL, g)) {
+    DH_free(dh);
+    return NULL;
+   }
   return(dh);
 }
 
